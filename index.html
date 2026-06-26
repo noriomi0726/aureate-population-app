@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AUREATE 立地人口調査</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" onerror="this.onerror=null;this.href='./vendor/leaflet/leaflet.css';" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">AUREATE Gastro Lounge</p>
+        <h1>立地人口調査</h1>
+      </div>
+      <div class="source-pill">e-Stat 2020 / 500m地域メッシュ</div>
+    </header>
+
+    <main class="layout">
+      <section class="controls">
+        <details class="control-details" open>
+          <summary>地点・半径を設定</summary>
+
+          <div class="field">
+            <label for="preset">プリセット地点</label>
+            <select id="preset"></select>
+          </div>
+
+          <div class="field">
+            <label for="address">住所検索</label>
+            <div class="inline">
+              <input id="address" type="text" placeholder="例: 赤間駅" autocomplete="street-address" />
+              <button id="geocodeBtn" type="button">検索</button>
+            </div>
+            <p class="hint" id="geoStatus">住所検索が使えない場合も、プリセットと緯度経度入力で集計できます。</p>
+          </div>
+
+          <div class="field two">
+            <label>
+              緯度
+              <input id="lat" type="number" step="0.000001" />
+            </label>
+            <label>
+              経度
+              <input id="lng" type="number" step="0.000001" />
+            </label>
+          </div>
+
+          <div class="field">
+            <label>標準半径</label>
+            <div class="radius-grid" id="standardRadii"></div>
+          </div>
+
+          <details class="advanced">
+            <summary>詳細半径を表示</summary>
+            <div class="radius-grid compact" id="extraRadii"></div>
+          </details>
+
+          <div class="field desktop-only">
+            <label for="fileInput">PC用: 人口CSV/TXTを手動読込</label>
+            <input id="fileInput" type="file" accept=".csv,.txt,text/csv,text/plain" multiple />
+          </div>
+        </details>
+
+        <div class="status" id="dataStatus">人口データを読み込み中...</div>
+      </section>
+
+      <section class="map-section">
+        <div id="map" aria-label="地図"></div>
+        <div class="map-fallback" id="mapFallback">地図タイルまたは地図ライブラリを読み込めません。人口集計は利用できます。</div>
+      </section>
+
+      <section class="results-section">
+        <div class="summary-card">
+          <div>
+            <p class="label">地点名</p>
+            <h2 id="placeName">-</h2>
+            <p class="coords" id="coords">-</p>
+          </div>
+          <div>
+            <p class="label">出典</p>
+            <p id="sourceText">e-Stat 国勢調査 2020年 500m地域メッシュ</p>
+          </div>
+          <div>
+            <p class="label">集計方法</p>
+            <p id="methodText">500mメッシュ人口を半径圏との重なり面積に応じて按分集計した推計値</p>
+          </div>
+        </div>
+
+        <div class="result-cards" id="resultCards"></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>地点名</th>
+                <th>緯度経度</th>
+                <th>半径</th>
+                <th>推計人口</th>
+                <th>人口密度</th>
+                <th>使用メッシュ数</th>
+                <th>出典</th>
+                <th>集計方法</th>
+              </tr>
+            </thead>
+            <tbody id="resultTable"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    window.loadLocalLeaflet = function () {
+      var script = document.createElement("script");
+      script.src = "./vendor/leaflet/leaflet.js";
+      script.onload = function () { window.dispatchEvent(new Event("leaflet-ready")); };
+      script.onerror = function () { window.dispatchEvent(new Event("leaflet-failed")); };
+      document.head.appendChild(script);
+    };
+  </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="window.dispatchEvent(new Event('leaflet-ready'))" onerror="window.loadLocalLeaflet()"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
