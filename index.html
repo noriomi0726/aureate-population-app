@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>AUREATE 立地人口調査</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" onerror="this.onerror=null;this.href='./vendor/leaflet/leaflet.css';" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
@@ -169,15 +170,23 @@
   </div>
 
   <script>
-    window.loadLocalLeaflet = function () {
+    window.loadLeafletFallback = function (step) {
       var script = document.createElement("script");
-      script.src = "./vendor/leaflet/leaflet.js";
+      script.src = step === "jsdelivr"
+        ? "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"
+        : "./vendor/leaflet/leaflet.js";
       script.onload = function () { window.dispatchEvent(new Event("leaflet-ready")); };
-      script.onerror = function () { window.dispatchEvent(new Event("leaflet-failed")); };
+      script.onerror = function () {
+        if (step === "jsdelivr") {
+          window.loadLeafletFallback("local");
+        } else {
+          window.dispatchEvent(new Event("leaflet-failed"));
+        }
+      };
       document.head.appendChild(script);
     };
   </script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="window.dispatchEvent(new Event('leaflet-ready'))" onerror="window.loadLocalLeaflet()"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="window.dispatchEvent(new Event('leaflet-ready'))" onerror="window.loadLeafletFallback('jsdelivr')"></script>
   <script src="./app.js"></script>
 </body>
 </html>

@@ -46,6 +46,24 @@ const EXTRA_RADII = [
   { value: 10000, label: "10km" }
 ];
 
+const TILE_PROVIDERS = [
+  {
+    name: "OpenStreetMap",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    options: { maxZoom: 19, attribution: "&copy; OpenStreetMap contributors" }
+  },
+  {
+    name: "国土地理院 淡色地図",
+    url: "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
+    options: { maxZoom: 18, attribution: "&copy; GSI Japan" }
+  },
+  {
+    name: "国土地理院 標準地図",
+    url: "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
+    options: { maxZoom: 18, attribution: "&copy; GSI Japan" }
+  }
+];
+
 const state = {
   placeName: PRESETS[0].name,
   areaName: PRESETS[0].areaName,
@@ -55,6 +73,9 @@ const state = {
   householdColumnFound: false,
   map: null,
   marker: null,
+  tileLayer: null,
+  tileProviderIndex: 0,
+  tileErrorCount: 0,
   layers: [],
   leafletReady: false,
   areaResolveId: 0,
@@ -742,10 +763,39 @@ function initMap() {
     boxZoom: false,
     keyboard: false
   }).setView([state.center.lat, state.center.lng], 13);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: "&copy; OpenStreetMap contributors"
-  }).addTo(state.map);
+  addTileLayer(0);
+}
+
+function addTileLayer(index) {
+  if (!state.map || !window.L) return;
+  const provider = TILE_PROVIDERS[index];
+  if (!provider) {
+    $("mapFallback").classList.add("show");
+    console.error("all map tile providers failed");
+    return;
+  }
+
+  if (state.tileLayer) {
+    state.tileLayer.remove();
+    state.tileLayer = null;
+  }
+
+  state.tileProviderIndex = index;
+  state.tileErrorCount = 0;
+  $("mapFallback").classList.remove("show");
+
+  state.tileLayer = L.tileLayer(provider.url, provider.options)
+    .on("tileload", () => {
+      $("mapFallback").classList.remove("show");
+    })
+    .on("tileerror", () => {
+      state.tileErrorCount++;
+      if (state.tileErrorCount >= 3) {
+        console.warn(`map tile provider failed: ${provider.name}`);
+        addTileLayer(index + 1);
+      }
+    })
+    .addTo(state.map);
 }
 
 function moveMap() {
