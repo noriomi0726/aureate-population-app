@@ -11,6 +11,10 @@ const METHOD_TEXT = "500mメッシュの人口・世帯数を半径圏との重�
 const HOUSEHOLD_UNAVAILABLE_TEXT = "世帯数データ未取得";
 const UNDETERMINED_AREA_TEXT = "対象地域未判定";
 const INCOME_UNREGISTERED_TEXT = "所得水準参考：未登録";
+const WARD_PARENT_AREAS = [
+  { pattern: /^4010[1356789]$/, parentAreaName: "北九州市" },
+  { pattern: /^4013[1-7]$/, parentAreaName: "福岡市" }
+];
 
 const DATA_COLUMNS = {
   mesh: ["key_code", "mesh_code", "mesh", "メッシュコード", "地域メッシュコード"],
@@ -53,6 +57,7 @@ const state = {
   marker: null,
   layers: [],
   leafletReady: false,
+  areaResolveId: 0,
   presentationMode: false
 };
 
@@ -140,6 +145,7 @@ function bindEvents() {
   $("fileInput").addEventListener("change", loadManualFiles);
   $("presentationBtn").addEventListener("click", togglePresentationMode);
   $("areaSelect").addEventListener("change", () => {
+    state.areaResolveId++;
     state.areaName = $("areaSelect").value || UNDETERMINED_AREA_TEXT;
     render();
   });
@@ -204,6 +210,7 @@ function householdStatusText() {
 }
 
 function setPlace(place, shouldRender) {
+  state.areaResolveId++;
   state.placeName = place.name;
   state.areaName = place.areaName;
   state.center = { lat: place.lat, lng: place.lng };
@@ -216,19 +223,27 @@ function setPlace(place, shouldRender) {
   if (shouldRender) render();
 }
 
-function setCenterFromInputs(name) {
+async function setCenterFromInputs(name) {
   const lat = Number($("lat").value);
   const lng = Number($("lng").value);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     setStatus("緯度経度を確認してください。", true);
     return;
   }
+  const resolveId = ++state.areaResolveId;
   state.placeName = name;
-  state.areaName = findNearestPresetArea(lat, lng) || UNDETERMINED_AREA_TEXT;
   state.center = { lat, lng };
   $("preset").value = "";
+  $("geoStatus").textContent = "緯度経度から所得水準参考の対象地域を判定中...";
+  state.areaName = findNearestPresetArea(lat, lng) || UNDETERMINED_AREA_TEXT;
   syncAreaSelect();
   moveMap();
+  render();
+  const areaName = await resolveAreaNameForLocation(lat, lng, name);
+  if (resolveId !== state.areaResolveId) return;
+  state.areaName = areaName;
+  syncAreaSelect();
+  $("geoStatus").textContent = `所得水準参考の対象地域: ${areaName}`;
   render();
 }
 
@@ -238,18 +253,21 @@ async function geocodeAddress() {
     $("geoStatus").textContent = "住所を入力してください。";
     return;
   }
+  const resolveId = ++state.areaResolveId;
   $("geocodeBtn").disabled = true;
   $("geoStatus").textContent = "検索中...";
   try {
     const result = await geocodeByGsi(address).catch(() => geocodeByNominatim(address));
+    const areaName = await resolveAreaNameForLocation(result.lat, result.lng, `${address} ${result.label}`);
+    if (resolveId !== state.areaResolveId) return;
     state.placeName = result.label;
-    state.areaName = inferAreaNameFromText(`${address} ${result.label}`) || findNearestPresetArea(result.lat, result.lng) || UNDETERMINED_AREA_TEXT;
+    state.areaName = areaName;
     state.center = { lat: result.lat, lng: result.lng };
     $("lat").value = result.lat.toFixed(6);
     $("lng").value = result.lng.toFixed(6);
     $("preset").value = "";
     syncAreaSelect();
-    $("geoStatus").textContent = result.label;
+    $("geoStatus").textContent = `${result.label} / 所得水準参考: ${areaName}`;
     moveMap();
     render();
   } catch (error) {
@@ -266,10 +284,50 @@ function findNearestPresetArea(lat, lng) {
   return nearest && nearest.distance <= 8000 ? nearest.place.areaName : "";
 }
 
+async function resolveAreaNameForLocation(lat, lng, text = "") {
+  try {
+    const reverse = await reverseGeocodeByGsi(lat, lng);
+    const codeArea = findIncomeAreaByCode(reverse.muniCd);
+    if (codeArea) return codeArea.areaName;
+    const reverseTextArea = inferAreaNameFromText(`${reverse.muniCd || ""} ${reverse.lv01Nm || ""}`);
+    if (reverseTextArea) return reverseTextArea;
+  } catch (error) {
+    console.error("area reverse geocode failed", error);
+  }
+  const textArea = inferAreaNameFromText(text);
+  if (textArea) return textArea;
+  return findNearestPresetArea(lat, lng) || UNDETERMINED_AREA_TEXT;
+}
+
 function inferAreaNameFromText(text) {
   const normalized = normalizeSearchText(text);
-  const match = state.incomeReferences.find((item) => normalized.includes(normalizeSearchText(item.areaName)));
-  return match?.areaName || "";
+  const match = state.incomeReferences
+    .map((item, index) => ({ item, index, score: areaNameMatchScore(normalized, item.areaName) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.index - b.index)[0];
+  return match?.item.areaName || "";
+}
+
+function areaNameMatchScore(normalizedText, areaName) {
+  const normalizedArea = normalizeSearchText(areaName);
+  if (!normalizedArea || !normalizedText.includes(normalizedArea)) return 0;
+  let score = normalizedArea.length * 10;
+  if (areaName.endsWith("県")) score -= 20;
+  return score;
+}
+
+function findIncomeAreaByCode(areaCode) {
+  const normalized = String(areaCode || "").trim();
+  const parentAreaName = parentAreaNameForWardCode(normalized);
+  if (parentAreaName) {
+    const parent = state.incomeReferences.find((item) => item.areaName === parentAreaName);
+    if (parent) return parent;
+  }
+  return state.incomeReferences.find((item) => String(item.areaCode) === normalized);
+}
+
+function parentAreaNameForWardCode(areaCode) {
+  return WARD_PARENT_AREAS.find((item) => item.pattern.test(areaCode))?.parentAreaName || "";
 }
 
 function syncAreaSelect() {
@@ -287,6 +345,16 @@ async function geocodeByGsi(address) {
   const item = pickGsiCandidate(items, address);
   const [lng, lat] = item.geometry.coordinates;
   return { lat: Number(lat), lng: Number(lng), label: item.properties?.title || address };
+}
+
+async function reverseGeocodeByGsi(lat, lng) {
+  const url = new URL("https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress");
+  url.searchParams.set("lat", lat);
+  url.searchParams.set("lon", lng);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("国土地理院逆ジオコーディングエラー");
+  const data = await response.json();
+  return data?.results || {};
 }
 
 function pickGsiCandidate(items, address) {
@@ -313,13 +381,14 @@ async function geocodeByNominatim(address) {
   const url = new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "1");
+  url.searchParams.set("addressdetails", "1");
   url.searchParams.set("countrycodes", "jp");
   url.searchParams.set("q", address);
   const response = await fetch(url, { headers: { Accept: "application/json" } });
   if (!response.ok) throw new Error("OpenStreetMap検索エラー");
   const items = await response.json();
   if (!items.length) throw new Error("候補なし");
-  return { lat: Number(items[0].lat), lng: Number(items[0].lon), label: items[0].name || address };
+  return { lat: Number(items[0].lat), lng: Number(items[0].lon), label: items[0].display_name || items[0].name || address };
 }
 
 function normalizeSearchText(value) {
