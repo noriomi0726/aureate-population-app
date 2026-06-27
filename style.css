@@ -43,6 +43,19 @@ select {
   border-bottom: 1px solid var(--line);
 }
 
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ghost-button {
+  min-height: 36px;
+  border: 1px solid #cfe1dc;
+  color: var(--brand-dark);
+  background: #eef8f5;
+}
+
 .eyebrow {
   margin: 0 0 2px;
   color: var(--gold);
@@ -254,6 +267,7 @@ button {
 }
 
 .summary-card,
+.income-card,
 .result-card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -267,6 +281,33 @@ button {
   grid-template-columns: 1.1fr 1fr 1.4fr;
   gap: 14px;
   margin-bottom: 14px;
+}
+
+.income-card {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.75fr) 1.6fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.income-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.income-grid strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.income-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .label {
@@ -303,7 +344,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
-  min-width: 980px;
+  min-width: 1180px;
 }
 
 th,
@@ -321,7 +362,11 @@ td:nth-child(2),
 th:nth-child(7),
 td:nth-child(7),
 th:nth-child(8),
-td:nth-child(8) {
+td:nth-child(8),
+th:nth-child(9),
+td:nth-child(9),
+th:nth-child(10),
+td:nth-child(10) {
   text-align: left;
 }
 
@@ -338,6 +383,18 @@ th {
   .topbar {
     align-items: flex-start;
     padding: 10px 12px;
+  }
+
+  .top-actions {
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .ghost-button {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 11px;
   }
 
   h1 {
@@ -418,11 +475,17 @@ th {
     padding: 10px;
   }
 
-  .summary-card {
+  .summary-card,
+  .income-card {
     grid-template-columns: 1fr;
     gap: 8px;
     margin-bottom: 10px;
     padding: 11px;
+  }
+
+  .income-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   .summary-card p,
@@ -442,14 +505,14 @@ th {
 
   .result-card {
     display: grid;
-    grid-template-columns: 78px 1fr 1fr;
+    grid-template-columns: 76px 1fr 1fr;
     gap: 8px;
     align-items: center;
     padding: 10px;
   }
 
   .result-card strong {
-    font-size: 17px;
+    font-size: 16px;
   }
 
   .result-card span {
@@ -462,6 +525,47 @@ th {
   .table-wrap {
     display: none;
   }
+}
+
+.presentation-mode .controls {
+  display: none;
+}
+
+.presentation-mode .layout {
+  grid-template-columns: 1fr;
+  grid-template-rows: 240px auto;
+}
+
+.presentation-mode .map-section {
+  min-height: 240px;
+}
+
+.presentation-mode #map {
+  min-height: 240px;
+}
+
+.presentation-mode .results-section {
+  padding: 12px;
+}
+
+.presentation-mode .summary-card,
+.presentation-mode .income-card,
+.presentation-mode .result-card {
+  box-shadow: none;
+}
+
+.presentation-mode .result-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.presentation-mode .result-card {
+  grid-template-columns: 1fr 1fr;
+}
+
+.presentation-mode .table-wrap {
+  display: none;
 }
 
 @media (max-width: 430px) {
@@ -486,5 +590,53 @@ th {
   #map {
     min-height: 180px;
     height: 180px;
+  }
+
+  .result-card {
+    grid-template-columns: 70px 1fr 1fr;
+  }
+
+  .presentation-mode .topbar {
+    padding: 8px 10px;
+  }
+
+  .presentation-mode .source-pill {
+    display: none;
+  }
+
+  .presentation-mode .map-section {
+    min-height: 145px;
+    margin-bottom: 8px;
+  }
+
+  .presentation-mode #map {
+    min-height: 145px;
+    height: 145px;
+  }
+
+  .presentation-mode .summary-card,
+  .presentation-mode .income-card {
+    padding: 9px;
+  }
+
+  .presentation-mode .result-cards {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .presentation-mode .result-card {
+    grid-template-columns: 62px 1fr 1fr;
+    padding: 8px;
+  }
+
+  .presentation-mode .result-card strong {
+    font-size: 14px;
+  }
+
+  .presentation-mode .result-card span,
+  .presentation-mode .label,
+  .presentation-mode .income-note,
+  .presentation-mode .summary-card p {
+    font-size: 10px;
   }
 }

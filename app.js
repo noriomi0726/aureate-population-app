@@ -5,16 +5,24 @@ const DATA_FILES = [
   "tblT001101H5130.txt"
 ];
 
+const INCOME_REFERENCE_FILE = "./data/income-reference.json";
 const SOURCE_TEXT = "e-Stat 国勢調査 2020年 500m地域メッシュ";
-const METHOD_TEXT = "500mメッシュ人口を半径圏との重なり面積に応じて按分集計した推計値";
+const METHOD_TEXT = "500mメッシュの人口・世帯数を半径圏との重なり面積に応じて按分集計した推計値";
+const HOUSEHOLD_UNAVAILABLE_TEXT = "世帯数データ未取得";
+
+const DATA_COLUMNS = {
+  mesh: ["key_code", "mesh_code", "mesh", "メッシュコード", "地域メッシュコード"],
+  population: ["t001101001", "population", "人口総数", "総人口", "総数", "value"],
+  household: ["t001101034", "households", "household", "世帯総数", "一般世帯数", "世帯数"]
+};
 
 const PRESETS = [
-  { id: "akama", name: "赤間駅前", lat: 33.8082939, lng: 130.5695947 },
-  { id: "higashi-fukuma", name: "東福間", lat: 33.7740686, lng: 130.5109685 },
-  { id: "nishi-fukuma", name: "西福間", lat: 33.7636092, lng: 130.4782372 },
-  { id: "fukuma-beach", name: "福間海岸", lat: 33.7699054, lng: 130.4710556 },
-  { id: "munakata-taisha", name: "宗像大社周辺", lat: 33.8305823, lng: 130.5145484 },
-  { id: "michinoeki-munakata", name: "道の駅むなかた", lat: 33.8483962, lng: 130.5039634 }
+  { id: "akama", name: "赤間駅前", areaName: "宗像市", lat: 33.8082939, lng: 130.5695947 },
+  { id: "higashi-fukuma", name: "東福間", areaName: "福津市", lat: 33.7740686, lng: 130.5109685 },
+  { id: "nishi-fukuma", name: "西福間", areaName: "福津市", lat: 33.7636092, lng: 130.4782372 },
+  { id: "fukuma-beach", name: "福間海岸", areaName: "福津市", lat: 33.7699054, lng: 130.4710556 },
+  { id: "munakata-taisha", name: "宗像大社周辺", areaName: "宗像市", lat: 33.8305823, lng: 130.5145484 },
+  { id: "michinoeki-munakata", name: "道の駅むなかた", areaName: "宗像市", lat: 33.8483962, lng: 130.5039634 }
 ];
 
 const STANDARD_RADII = [
@@ -34,12 +42,16 @@ const EXTRA_RADII = [
 
 const state = {
   placeName: PRESETS[0].name,
+  areaName: PRESETS[0].areaName,
   center: { lat: PRESETS[0].lat, lng: PRESETS[0].lng },
   rows: [],
+  incomeReferences: [],
+  householdColumnFound: false,
   map: null,
   marker: null,
   layers: [],
-  leafletReady: false
+  leafletReady: false,
+  presentationMode: false
 };
 
 const $ = (id) => document.getElementById(id);
@@ -65,7 +77,7 @@ async function boot() {
     state.leafletReady = true;
     initMap();
   }
-  await loadDefaultData();
+  await Promise.all([loadDefaultData(), loadIncomeReferences()]);
   render();
 }
 
@@ -112,19 +124,33 @@ function bindEvents() {
   $("standardRadii").addEventListener("change", render);
   $("extraRadii").addEventListener("change", render);
   $("fileInput").addEventListener("change", loadManualFiles);
+  $("presentationBtn").addEventListener("click", togglePresentationMode);
+}
+
+async function loadIncomeReferences() {
+  try {
+    const response = await fetch(INCOME_REFERENCE_FILE);
+    if (!response.ok) throw new Error(`${INCOME_REFERENCE_FILE} を読み込めませんでした。`);
+    const data = await response.json();
+    state.incomeReferences = Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("income-reference.json load failed", error);
+    state.incomeReferences = [];
+  }
 }
 
 async function loadDefaultData() {
   setStatus("人口データを自動読み込み中...");
   try {
     const loaded = [];
+    state.householdColumnFound = false;
     for (const fileName of DATA_FILES) {
       const response = await fetch(`./data/${fileName}`);
       if (!response.ok) throw new Error(`${fileName} を読み込めませんでした。`);
       loaded.push(...parsePopulationText(await response.text()));
     }
     state.rows = loaded;
-    setStatus(`自動読込完了: ${nf.format(state.rows.length)}メッシュ / ${coverageText()}`);
+    setStatus(`自動読込完了: ${nf.format(state.rows.length)}メッシュ / ${householdStatusText()} / ${coverageText()}`);
   } catch (error) {
     state.rows = [];
     setStatus(`自動読込に失敗しました。PCでは人口CSV/TXTを手動選択できます。${error.message}`, true);
@@ -137,11 +163,12 @@ async function loadManualFiles(event) {
   try {
     setStatus("手動ファイルを読み込み中...");
     const loaded = [];
+    state.householdColumnFound = false;
     for (const file of files) {
       loaded.push(...parsePopulationText(await file.text()));
     }
     state.rows = loaded;
-    setStatus(`手動読込完了: ${files.length}ファイル / ${nf.format(state.rows.length)}件 / ${coverageText()}`);
+    setStatus(`手動読込完了: ${files.length}ファイル / ${nf.format(state.rows.length)}件 / ${householdStatusText()} / ${coverageText()}`);
     render();
   } catch (error) {
     setStatus(error.message, true);
@@ -153,8 +180,13 @@ function setStatus(message, warn = false) {
   $("dataStatus").className = warn ? "status warn" : "status";
 }
 
+function householdStatusText() {
+  return state.householdColumnFound ? "世帯数読込済み" : HOUSEHOLD_UNAVAILABLE_TEXT;
+}
+
 function setPlace(place, shouldRender) {
   state.placeName = place.name;
+  state.areaName = place.areaName;
   state.center = { lat: place.lat, lng: place.lng };
   $("preset").value = place.id;
   $("lat").value = place.lat.toFixed(6);
@@ -172,6 +204,7 @@ function setCenterFromInputs(name) {
     return;
   }
   state.placeName = name;
+  state.areaName = findNearestPresetArea(lat, lng);
   state.center = { lat, lng };
   $("preset").value = "";
   moveMap();
@@ -189,6 +222,7 @@ async function geocodeAddress() {
   try {
     const result = await geocodeByGsi(address).catch(() => geocodeByNominatim(address));
     state.placeName = result.label;
+    state.areaName = findNearestPresetArea(result.lat, result.lng);
     state.center = { lat: result.lat, lng: result.lng };
     $("lat").value = result.lat.toFixed(6);
     $("lng").value = result.lng.toFixed(6);
@@ -201,6 +235,13 @@ async function geocodeAddress() {
   } finally {
     $("geocodeBtn").disabled = false;
   }
+}
+
+function findNearestPresetArea(lat, lng) {
+  const nearest = PRESETS
+    .map((place) => ({ place, distance: distanceMeters({ lat, lng }, place) }))
+    .sort((a, b) => a.distance - b.distance)[0];
+  return nearest && nearest.distance <= 8000 ? nearest.place.areaName : "未登録";
 }
 
 async function geocodeByGsi(address) {
@@ -258,10 +299,11 @@ function selectedRadii() {
     .sort((a, b) => a - b);
 }
 
-function analyze() {
-  const radii = selectedRadii();
+function analyze(radii = selectedRadii()) {
   return radii.map((radius) => {
     let population = 0;
+    let households = 0;
+    let hasHouseholds = false;
     let meshCount = 0;
     if (state.rows.length) {
       const candidates = state.rows.filter((row) => {
@@ -272,6 +314,10 @@ function analyze() {
         const ratio = meshCircleOverlapRatio(row.bounds, radius);
         if (ratio > 0) {
           population += row.population * ratio;
+          if (Number.isFinite(row.households)) {
+            households += row.households * ratio;
+            hasHouseholds = true;
+          }
           meshCount++;
         }
       }
@@ -280,6 +326,8 @@ function analyze() {
     return {
       radius,
       population: Math.round(population),
+      households: hasHouseholds ? Math.round(households) : null,
+      peoplePerHousehold: hasHouseholds && households > 0 ? population / households : null,
       density: Math.round(population / areaKm2),
       meshCount
     };
@@ -287,9 +335,10 @@ function analyze() {
 }
 
 function render() {
-  const results = analyze();
+  const results = analyze(state.presentationMode ? STANDARD_RADII.map((radius) => radius.value) : selectedRadii());
   $("placeName").textContent = state.placeName;
   $("coords").textContent = `${state.center.lat.toFixed(6)}, ${state.center.lng.toFixed(6)}`;
+  renderIncomeReference();
   renderCards(results);
   renderTable(results);
   drawMap(results);
@@ -307,8 +356,20 @@ function renderCards(results) {
         <strong>${nf.format(row.population)}</strong>
       </div>
       <div>
-        <span>人口密度 / メッシュ</span>
-        <strong>${nf.format(row.density)} / ${nf.format(row.meshCount)}</strong>
+        <span>推計世帯数</span>
+        <strong>${formatNullableNumber(row.households, HOUSEHOLD_UNAVAILABLE_TEXT)}</strong>
+      </div>
+      <div>
+        <span>1世帯あたり人口</span>
+        <strong>${formatPeoplePerHousehold(row.peoplePerHousehold)}</strong>
+      </div>
+      <div>
+        <span>人口密度</span>
+        <strong>${nf.format(row.density)}</strong>
+      </div>
+      <div>
+        <span>使用メッシュ数</span>
+        <strong>${nf.format(row.meshCount)}</strong>
       </div>
     </article>
   `).join("");
@@ -321,12 +382,45 @@ function renderTable(results) {
       <td>${state.center.lat.toFixed(6)}, ${state.center.lng.toFixed(6)}</td>
       <td>${formatRadius(row.radius)}</td>
       <td>${nf.format(row.population)}</td>
+      <td>${formatNullableNumber(row.households, HOUSEHOLD_UNAVAILABLE_TEXT)}</td>
+      <td>${formatPeoplePerHousehold(row.peoplePerHousehold)}</td>
       <td>${nf.format(row.density)} 人/km2</td>
       <td>${nf.format(row.meshCount)}</td>
       <td>${SOURCE_TEXT}</td>
       <td>${METHOD_TEXT}</td>
     </tr>
   `).join("");
+}
+
+function renderIncomeReference() {
+  const income = state.incomeReferences.find((item) => item.areaName === state.areaName);
+  $("incomeArea").textContent = state.areaName && state.areaName !== "未登録" ? state.areaName : "未登録";
+  $("incomeAverage").textContent = formatIncome(income?.averageHouseholdIncome);
+  $("incomeMedian").textContent = formatIncome(income?.medianHouseholdIncome);
+  $("incomeSource").textContent = income?.source ? income.source : "出典未登録";
+  $("incomeNote").textContent = income?.note ? income.note : "未登録";
+}
+
+function formatNullableNumber(value, fallback) {
+  return Number.isFinite(value) ? nf.format(value) : fallback;
+}
+
+function formatPeoplePerHousehold(value) {
+  return Number.isFinite(value) ? value.toFixed(2) : HOUSEHOLD_UNAVAILABLE_TEXT;
+}
+
+function formatIncome(value) {
+  return Number.isFinite(value) ? `${nf.format(value)}万円` : "未登録";
+}
+
+function togglePresentationMode() {
+  state.presentationMode = !state.presentationMode;
+  document.body.classList.toggle("presentation-mode", state.presentationMode);
+  $("presentationBtn").textContent = state.presentationMode ? "通常表示" : "資料用表示";
+  render();
+  if (state.presentationMode) {
+    document.querySelector(".results-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 }
 
 function formatRadius(radius) {
@@ -338,8 +432,11 @@ function parsePopulationText(text) {
   if (lines.length < 2) return [];
   const delimiter = detectDelimiter(lines[0]);
   const header = splitDelimitedLine(lines[0], delimiter).map(normalizeHeader);
-  const meshIndex = findColumn(header, ["key_code", "mesh_code", "mesh", "メッシュコード", "地域メッシュコード"]);
-  const popIndex = findColumn(header, ["t001101001", "population", "人口総数", "総人口", "総数", "value"]);
+  const meshIndex = findColumn(header, DATA_COLUMNS.mesh);
+  const popIndex = findColumn(header, DATA_COLUMNS.population);
+  // T001101034 is 世帯総数 in the e-Stat 2020 census mesh files used by this app.
+  const householdIndex = findColumn(header, DATA_COLUMNS.household);
+  state.householdColumnFound = state.householdColumnFound || householdIndex !== -1;
   if (meshIndex === -1 || popIndex === -1) {
     throw new Error("KEY_CODE と T001101001（人口総数）を含むファイルを指定してください。");
   }
@@ -351,6 +448,7 @@ function parsePopulationText(text) {
     if (!/^\d{6}(\d{2})?(\d)?$/.test(meshCode)) continue;
     const population = parseNumber(values[popIndex]);
     if (!Number.isFinite(population) || population <= 0) continue;
+    const households = householdIndex === -1 ? null : parseNumber(values[householdIndex]);
     const bounds = meshBounds(meshCode);
     const lat = (bounds.south + bounds.north) / 2;
     const lng = (bounds.west + bounds.east) / 2;
@@ -360,6 +458,7 @@ function parsePopulationText(text) {
       lng,
       bounds,
       population,
+      households: Number.isFinite(households) ? households : null,
       coverRadius: meshCoverRadius(bounds, lat, lng)
     });
   }

@@ -14,7 +14,10 @@
         <p class="eyebrow">AUREATE Gastro Lounge</p>
         <h1>立地人口調査</h1>
       </div>
-      <div class="source-pill">e-Stat 2020 / 500m地域メッシュ</div>
+      <div class="top-actions">
+        <button id="presentationBtn" class="ghost-button" type="button">資料用表示</button>
+        <div class="source-pill">e-Stat 2020 / 500m地域メッシュ</div>
+      </div>
     </header>
 
     <main class="layout">
@@ -84,8 +87,34 @@
           </div>
           <div>
             <p class="label">集計方法</p>
-            <p id="methodText">500mメッシュ人口を半径圏との重なり面積に応じて按分集計した推計値</p>
+            <p id="methodText">500mメッシュの人口・世帯数を半径圏との重なり面積に応じて按分集計した推計値</p>
           </div>
+        </div>
+
+        <div class="income-card" id="incomeCard">
+          <div>
+            <p class="label">所得水準参考</p>
+            <h2 id="incomeArea">未登録</h2>
+          </div>
+          <div class="income-grid">
+            <div>
+              <p class="label">平均世帯収入</p>
+              <strong id="incomeAverage">未登録</strong>
+            </div>
+            <div>
+              <p class="label">中央世帯収入</p>
+              <strong id="incomeMedian">未登録</strong>
+            </div>
+            <div>
+              <p class="label">出典</p>
+              <strong id="incomeSource">出典未登録</strong>
+            </div>
+            <div>
+              <p class="label">備考</p>
+              <strong id="incomeNote">未登録</strong>
+            </div>
+          </div>
+          <p class="income-note">世帯収入は国勢調査500m地域メッシュには含まれないため、別資料に基づく地域別参考値として表示しています。</p>
         </div>
 
         <div class="result-cards" id="resultCards"></div>
@@ -98,6 +127,8 @@
                 <th>緯度経度</th>
                 <th>半径</th>
                 <th>推計人口</th>
+                <th>推計世帯数</th>
+                <th>1世帯あたり人口</th>
                 <th>人口密度</th>
                 <th>使用メッシュ数</th>
                 <th>出典</th>
