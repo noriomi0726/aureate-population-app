@@ -486,7 +486,17 @@ function coverageText() {
 function initMap() {
   if (!state.leafletReady || !window.L || state.map) return;
   $("mapFallback").classList.remove("show");
-  state.map = L.map("map", { zoomControl: true }).setView([state.center.lat, state.center.lng], 13);
+  const isSmallTouch = window.matchMedia("(max-width: 820px)").matches;
+  state.map = L.map("map", {
+    zoomControl: !isSmallTouch,
+    dragging: !isSmallTouch,
+    tap: !isSmallTouch,
+    touchZoom: !isSmallTouch,
+    scrollWheelZoom: false,
+    doubleClickZoom: !isSmallTouch,
+    boxZoom: false,
+    keyboard: false
+  }).setView([state.center.lat, state.center.lng], 13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: "&copy; OpenStreetMap contributors"
