@@ -266,6 +266,11 @@ button {
   padding: 16px;
 }
 
+.presentation-subtitle,
+.presentation-note {
+  display: none;
+}
+
 .summary-card,
 .income-card,
 .result-card {
@@ -527,6 +532,7 @@ th {
     color: var(--muted);
     font-size: 10px;
     font-weight: 800;
+    white-space: nowrap;
   }
 
   .table-wrap {
@@ -552,7 +558,45 @@ th {
 }
 
 .presentation-mode .results-section {
+  display: flex;
+  flex-direction: column;
   padding: 12px;
+}
+
+.presentation-mode .presentation-subtitle {
+  display: block;
+  order: 0;
+  margin: 0 0 8px;
+  color: #26433b;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.presentation-mode .summary-card {
+  order: 1;
+}
+
+.presentation-mode .result-cards {
+  order: 2;
+}
+
+.presentation-mode .income-card {
+  order: 3;
+}
+
+.presentation-mode .presentation-note {
+  display: block;
+  order: 4;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
 }
 
 .presentation-mode .summary-card,
@@ -569,6 +613,10 @@ th {
 
 .presentation-mode .result-card {
   grid-template-columns: 1fr 1fr;
+}
+
+.presentation-mode .result-card span {
+  white-space: nowrap;
 }
 
 .presentation-mode .table-wrap {
@@ -612,42 +660,71 @@ th {
   }
 
   .presentation-mode .map-section {
-    min-height: 145px;
+    min-height: 100px;
     margin-bottom: 8px;
   }
 
   .presentation-mode #map {
-    min-height: 145px;
-    height: 145px;
+    min-height: 100px;
+    height: 100px;
   }
 
   .presentation-mode .summary-card,
   .presentation-mode .income-card {
-    padding: 9px;
+    padding: 8px;
   }
 
   .presentation-mode .income-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+
+  .presentation-mode .income-grid > div:nth-child(7),
+  .presentation-mode .income-grid > div:nth-child(8) {
+    display: none;
+  }
+
+  .presentation-mode .income-note {
+    line-height: 1.35;
   }
 
   .presentation-mode .result-cards {
-    grid-template-columns: 1fr;
-    gap: 6px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
   }
 
   .presentation-mode .result-card {
-    grid-template-columns: 62px 1fr 1fr;
-    padding: 8px;
+    grid-template-columns: 1fr;
+    gap: 3px;
+    padding: 5px;
+  }
+
+  .presentation-mode .result-card > div {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    column-gap: 3px;
   }
 
   .presentation-mode .result-card strong {
-    font-size: 14px;
+    font-size: 10px;
+    line-height: 1.2;
+    text-align: right;
   }
 
   .presentation-mode .result-card span,
   .presentation-mode .label,
   .presentation-mode .income-note,
-  .presentation-mode .summary-card p {
+  .presentation-mode .summary-card p,
+  .presentation-mode .presentation-note {
     font-size: 10px;
+  }
+
+  .presentation-mode .result-card span {
+    font-size: 8px;
+  }
+
+  .presentation-mode .presentation-subtitle {
+    font-size: 12px;
   }
 }

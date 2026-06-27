@@ -440,6 +440,7 @@ function analyze(radii = selectedRadii()) {
 function render() {
   const results = analyze(state.presentationMode ? STANDARD_RADII.map((radius) => radius.value) : selectedRadii());
   $("placeName").textContent = state.placeName;
+  $("presentationSubtitle").textContent = `${state.placeName} 商圏人口・世帯数・所得水準参考`;
   $("coords").textContent = `${state.center.lat.toFixed(6)}, ${state.center.lng.toFixed(6)}`;
   renderIncomeReference();
   renderCards(results);
@@ -461,19 +462,19 @@ function renderCards(results) {
       </div>
       <div>
         <span>推計人口</span>
-        <strong>${nf.format(row.population)}</strong>
+        <strong>${formatPopulation(row.population)}</strong>
       </div>
       <div>
         <span>推計世帯数</span>
-        <strong>${formatNullableNumber(row.households, HOUSEHOLD_UNAVAILABLE_TEXT)}</strong>
+        <strong>${formatHouseholds(row.households)}</strong>
       </div>
       <div>
-        <span>1世帯あたり人口</span>
+        <span>世帯人員</span>
         <strong>${formatPeoplePerHousehold(row.peoplePerHousehold)}</strong>
       </div>
       <div>
         <span>人口密度</span>
-        <strong>${nf.format(row.density)}</strong>
+        <strong>${formatDensity(row.density)}</strong>
       </div>
       <div>
         <span>使用メッシュ数</span>
@@ -489,10 +490,10 @@ function renderTable(results) {
       <td>${state.placeName}</td>
       <td>${state.center.lat.toFixed(6)}, ${state.center.lng.toFixed(6)}</td>
       <td>${formatRadius(row.radius)}</td>
-      <td>${nf.format(row.population)}</td>
-      <td>${formatNullableNumber(row.households, HOUSEHOLD_UNAVAILABLE_TEXT)}</td>
+      <td>${formatPopulation(row.population)}</td>
+      <td>${formatHouseholds(row.households)}</td>
       <td>${formatPeoplePerHousehold(row.peoplePerHousehold)}</td>
-      <td>${nf.format(row.density)} 人/km2</td>
+      <td>${formatDensity(row.density)}</td>
       <td>${nf.format(row.meshCount)}</td>
       <td>${SOURCE_TEXT}</td>
       <td>${METHOD_TEXT}</td>
@@ -527,6 +528,18 @@ function formatNullableNumber(value, fallback) {
   return Number.isFinite(value) ? nf.format(value) : fallback;
 }
 
+function formatPopulation(value) {
+  return Number.isFinite(value) ? `${nf.format(value)}人` : "未登録";
+}
+
+function formatHouseholds(value) {
+  return Number.isFinite(value) ? `${nf.format(value)}世帯` : HOUSEHOLD_UNAVAILABLE_TEXT;
+}
+
+function formatDensity(value) {
+  return Number.isFinite(value) ? `${nf.format(value)}人/km²` : "未登録";
+}
+
 function setIncomeUnavailable(note) {
   $("incomeTotal").textContent = "未登録";
   $("incomeOver500").textContent = "未登録";
@@ -539,7 +552,7 @@ function setIncomeUnavailable(note) {
 }
 
 function formatPeoplePerHousehold(value) {
-  return Number.isFinite(value) ? value.toFixed(2) : HOUSEHOLD_UNAVAILABLE_TEXT;
+  return Number.isFinite(value) ? `${value.toFixed(2)}人` : HOUSEHOLD_UNAVAILABLE_TEXT;
 }
 
 function formatPercent(value) {

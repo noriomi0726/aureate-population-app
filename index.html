@@ -81,6 +81,8 @@
       </section>
 
       <section class="results-section">
+        <p class="presentation-subtitle" id="presentationSubtitle">-</p>
+
         <div class="summary-card">
           <div>
             <p class="label">地点名</p>
@@ -99,7 +101,7 @@
 
         <div class="income-card" id="incomeCard">
           <div>
-            <p class="label">市区町村単位 所得水準参考</p>
+            <p class="label">市区町村別 所得水準参考</p>
             <h2 id="incomeArea">未登録</h2>
           </div>
           <div class="income-grid">
@@ -136,7 +138,7 @@
               <strong id="incomeNote">未登録</strong>
             </div>
           </div>
-          <p class="income-note">世帯収入は国勢調査500m地域メッシュには含まれないため、令和5年住宅・土地統計調査に基づく市区町村別参考値として表示しています。半径商圏内の実測値ではありません。</p>
+          <p class="income-note">出典: 令和5年住宅・土地統計調査 表43-4。世帯収入は国勢調査500m地域メッシュには含まれないため、市区町村別参考値として表示しています。半径商圏内の実測値ではありません。</p>
         </div>
 
         <div class="result-cards" id="resultCards"></div>
@@ -150,7 +152,7 @@
                 <th>半径</th>
                 <th>推計人口</th>
                 <th>推計世帯数</th>
-                <th>1世帯あたり人口</th>
+                <th>世帯人員</th>
                 <th>人口密度</th>
                 <th>使用メッシュ数</th>
                 <th>出典</th>
@@ -160,6 +162,8 @@
             <tbody id="resultTable"></tbody>
           </table>
         </div>
+
+        <p class="presentation-note" id="presentationNote">人口・世帯数は e-Stat 国勢調査2020年500m地域メッシュを用い、半径圏との重なり面積に応じて按分集計した推計値です。所得水準は令和5年住宅・土地統計調査 表43-4に基づく市区町村別参考値であり、半径商圏内の実測値ではありません。</p>
       </section>
     </main>
   </div>
