@@ -1,30 +1,288 @@
 [
   {
-    "areaName": "宗像市",
-    "averageHouseholdIncome": null,
-    "medianHouseholdIncome": null,
-    "source": "",
-    "note": "未登録"
+    "areaCode": "40000",
+    "areaName": "福岡県",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 2351800,
+    "incomeClasses": {
+      "under100": 148400,
+      "100to150": 164700,
+      "150to200": 188000,
+      "200to300": 413000,
+      "300to400": 356100,
+      "400to500": 273000,
+      "500to700": 341900,
+      "700to1000": 242800,
+      "1000to1500": 94900,
+      "over1500": 27900
+    },
+    "ratios": {
+      "over500": 0.3008,
+      "over700": 0.1555,
+      "over1000": 0.0522
+    },
+    "dominantIncomeClass": "200～300万円未満",
+    "medianIncomeClass": "300～400万円未満"
   },
   {
-    "areaName": "福津市",
-    "averageHouseholdIncome": null,
-    "medianHouseholdIncome": null,
-    "source": "",
-    "note": "未登録"
-  },
-  {
-    "areaName": "福岡市",
-    "averageHouseholdIncome": null,
-    "medianHouseholdIncome": null,
-    "source": "",
-    "note": "未登録"
-  },
-  {
+    "areaCode": "40100",
     "areaName": "北九州市",
-    "averageHouseholdIncome": null,
-    "medianHouseholdIncome": null,
-    "source": "",
-    "note": "未登録"
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 433000,
+    "incomeClasses": {
+      "under100": 27700,
+      "100to150": 35400,
+      "150to200": 37300,
+      "200to300": 80300,
+      "300to400": 60400,
+      "400to500": 49000,
+      "500to700": 59900,
+      "700to1000": 44400,
+      "1000to1500": 15700,
+      "over1500": 4600
+    },
+    "ratios": {
+      "over500": 0.2878,
+      "over700": 0.1494,
+      "over1000": 0.0469
+    },
+    "dominantIncomeClass": "200～300万円未満",
+    "medianIncomeClass": "300～400万円未満"
+  },
+  {
+    "areaCode": "40130",
+    "areaName": "福岡市",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 856400,
+    "incomeClasses": {
+      "under100": 53800,
+      "100to150": 54100,
+      "150to200": 64100,
+      "200to300": 152600,
+      "300to400": 136300,
+      "400to500": 100600,
+      "500to700": 118300,
+      "700to1000": 91100,
+      "1000to1500": 40800,
+      "over1500": 12700
+    },
+    "ratios": {
+      "over500": 0.307,
+      "over700": 0.1688,
+      "over1000": 0.0625
+    },
+    "dominantIncomeClass": "200～300万円未満",
+    "medianIncomeClass": "300～400万円未満"
+  },
+  {
+    "areaCode": "40203",
+    "areaName": "久留米市",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 130450,
+    "incomeClasses": {
+      "under100": 10310,
+      "100to150": 10350,
+      "150to200": 11120,
+      "200to300": 18550,
+      "300to400": 20320,
+      "400to500": 17340,
+      "500to700": 19610,
+      "700to1000": 12270,
+      "1000to1500": 5140,
+      "over1500": 1890
+    },
+    "ratios": {
+      "over500": 0.2983,
+      "over700": 0.1479,
+      "over1000": 0.0539
+    },
+    "dominantIncomeClass": "300～400万円未満",
+    "medianIncomeClass": "300～400万円未満"
+  },
+  {
+    "areaCode": "40205",
+    "areaName": "飯塚市",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 56040,
+    "incomeClasses": {
+      "under100": 5350,
+      "100to150": 5060,
+      "150to200": 4840,
+      "200to300": 11090,
+      "300to400": 8540,
+      "400to500": 5390,
+      "500to700": 6590,
+      "700to1000": 4230,
+      "1000to1500": 1320,
+      "over1500": 380
+    },
+    "ratios": {
+      "over500": 0.2234,
+      "over700": 0.1058,
+      "over1000": 0.0303
+    },
+    "dominantIncomeClass": "200～300万円未満",
+    "medianIncomeClass": "300～400万円未満"
+  },
+  {
+    "areaCode": "40218",
+    "areaName": "春日市",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 47180,
+    "incomeClasses": {
+      "under100": 1880,
+      "100to150": 2620,
+      "150to200": 2890,
+      "200to300": 7480,
+      "300to400": 7390,
+      "400to500": 5320,
+      "500to700": 8340,
+      "700to1000": 5460,
+      "1000to1500": 2670,
+      "over1500": 430
+    },
+    "ratios": {
+      "over500": 0.3582,
+      "over700": 0.1814,
+      "over1000": 0.0657
+    },
+    "dominantIncomeClass": "500～700万円未満",
+    "medianIncomeClass": "400～500万円未満"
+  },
+  {
+    "areaCode": "40220",
+    "areaName": "宗像市",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 41930,
+    "incomeClasses": {
+      "under100": 3320,
+      "100to150": 2010,
+      "150to200": 3030,
+      "200to300": 8880,
+      "300to400": 5880,
+      "400to500": 4440,
+      "500to700": 6470,
+      "700to1000": 4990,
+      "1000to1500": 1660,
+      "over1500": 350
+    },
+    "ratios": {
+      "over500": 0.3212,
+      "over700": 0.1669,
+      "over1000": 0.0479
+    },
+    "dominantIncomeClass": "200～300万円未満",
+    "medianIncomeClass": "300～400万円未満"
+  },
+  {
+    "areaCode": "40223",
+    "areaName": "古賀市",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 23860,
+    "incomeClasses": {
+      "under100": 720,
+      "100to150": 1210,
+      "150to200": 1790,
+      "200to300": 4020,
+      "300to400": 4380,
+      "400to500": 3580,
+      "500to700": 3490,
+      "700to1000": 2880,
+      "1000to1500": 1110,
+      "over1500": 280
+    },
+    "ratios": {
+      "over500": 0.3252,
+      "over700": 0.179,
+      "over1000": 0.0583
+    },
+    "dominantIncomeClass": "300～400万円未満",
+    "medianIncomeClass": "300～400万円未満"
+  },
+  {
+    "areaCode": "40224",
+    "areaName": "福津市",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 27720,
+    "incomeClasses": {
+      "under100": 900,
+      "100to150": 1390,
+      "150to200": 1690,
+      "200to300": 4780,
+      "300to400": 4370,
+      "400to500": 3220,
+      "500to700": 5370,
+      "700to1000": 3410,
+      "1000to1500": 1250,
+      "over1500": 190
+    },
+    "ratios": {
+      "over500": 0.3687,
+      "over700": 0.175,
+      "over1000": 0.0519
+    },
+    "dominantIncomeClass": "500～700万円未満",
+    "medianIncomeClass": "400～500万円未満"
+  },
+  {
+    "areaCode": "40345",
+    "areaName": "新宮町",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 12530,
+    "incomeClasses": {
+      "under100": 290,
+      "100to150": 580,
+      "150to200": 500,
+      "200to300": 1860,
+      "300to400": 1840,
+      "400to500": 990,
+      "500to700": 2540,
+      "700to1000": 2320,
+      "1000to1500": 960,
+      "over1500": 220
+    },
+    "ratios": {
+      "over500": 0.482,
+      "over700": 0.2793,
+      "over1000": 0.0942
+    },
+    "dominantIncomeClass": "500～700万円未満",
+    "medianIncomeClass": "500～700万円未満"
+  },
+  {
+    "areaCode": "40384",
+    "areaName": "遠賀町",
+    "source": "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4",
+    "sourceNote": "市区町村単位の統計であり、半径商圏内の実測値ではありません。",
+    "totalHouseholds": 7210,
+    "incomeClasses": {
+      "under100": 380,
+      "100to150": 440,
+      "150to200": 530,
+      "200to300": 1170,
+      "300to400": 1190,
+      "400to500": 1280,
+      "500to700": 1010,
+      "700to1000": 700,
+      "1000to1500": 360,
+      "over1500": 30
+    },
+    "ratios": {
+      "over500": 0.2913,
+      "over700": 0.1512,
+      "over1000": 0.0541
+    },
+    "dominantIncomeClass": "400～500万円未満",
+    "medianIncomeClass": "300～400万円未満"
   }
 ]

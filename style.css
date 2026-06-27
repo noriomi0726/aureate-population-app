@@ -288,6 +288,8 @@ button {
   grid-template-columns: minmax(170px, 0.75fr) 1.6fr;
   gap: 14px;
   margin-bottom: 14px;
+  border-color: #d7c48f;
+  background: #fffdf4;
 }
 
 .income-grid {
@@ -300,6 +302,7 @@ button {
   display: block;
   font-size: 13px;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .income-note {
@@ -488,6 +491,10 @@ th {
     gap: 8px;
   }
 
+  .income-grid strong {
+    font-size: 12px;
+  }
+
   .summary-card p,
   .coords {
     font-size: 11px;
@@ -617,6 +624,10 @@ th {
   .presentation-mode .summary-card,
   .presentation-mode .income-card {
     padding: 9px;
+  }
+
+  .presentation-mode .income-grid {
+    grid-template-columns: 1fr 1fr;
   }
 
   .presentation-mode .result-cards {

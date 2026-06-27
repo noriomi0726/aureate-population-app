@@ -51,6 +51,12 @@
           </div>
 
           <div class="field">
+            <label for="areaSelect">所得水準参考の対象地域</label>
+            <select id="areaSelect"></select>
+            <p class="hint">住所検索や緯度経度入力で判定できない場合は、市区町村を手動選択してください。</p>
+          </div>
+
+          <div class="field">
             <label>標準半径</label>
             <div class="radius-grid" id="standardRadii"></div>
           </div>
@@ -93,28 +99,44 @@
 
         <div class="income-card" id="incomeCard">
           <div>
-            <p class="label">所得水準参考</p>
+            <p class="label">市区町村単位 所得水準参考</p>
             <h2 id="incomeArea">未登録</h2>
           </div>
           <div class="income-grid">
             <div>
-              <p class="label">平均世帯収入</p>
-              <strong id="incomeAverage">未登録</strong>
+              <p class="label">主世帯数</p>
+              <strong id="incomeTotal">未登録</strong>
             </div>
             <div>
-              <p class="label">中央世帯収入</p>
-              <strong id="incomeMedian">未登録</strong>
+              <p class="label">500万円以上</p>
+              <strong id="incomeOver500">未登録</strong>
+            </div>
+            <div>
+              <p class="label">700万円以上</p>
+              <strong id="incomeOver700">未登録</strong>
+            </div>
+            <div>
+              <p class="label">1000万円以上</p>
+              <strong id="incomeOver1000">未登録</strong>
+            </div>
+            <div>
+              <p class="label">最多収入階級</p>
+              <strong id="incomeDominant">未登録</strong>
+            </div>
+            <div>
+              <p class="label">中央値階級</p>
+              <strong id="incomeMedianClass">未登録</strong>
             </div>
             <div>
               <p class="label">出典</p>
               <strong id="incomeSource">出典未登録</strong>
             </div>
             <div>
-              <p class="label">備考</p>
+              <p class="label">注意</p>
               <strong id="incomeNote">未登録</strong>
             </div>
           </div>
-          <p class="income-note">世帯収入は国勢調査500m地域メッシュには含まれないため、別資料に基づく地域別参考値として表示しています。</p>
+          <p class="income-note">世帯収入は国勢調査500m地域メッシュには含まれないため、令和5年住宅・土地統計調査に基づく市区町村別参考値として表示しています。半径商圏内の実測値ではありません。</p>
         </div>
 
         <div class="result-cards" id="resultCards"></div>

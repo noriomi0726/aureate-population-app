@@ -9,6 +9,8 @@ const INCOME_REFERENCE_FILE = "./data/income-reference.json";
 const SOURCE_TEXT = "e-Stat 国勢調査 2020年 500m地域メッシュ";
 const METHOD_TEXT = "500mメッシュの人口・世帯数を半径圏との重なり面積に応じて按分集計した推計値";
 const HOUSEHOLD_UNAVAILABLE_TEXT = "世帯数データ未取得";
+const UNDETERMINED_AREA_TEXT = "対象地域未判定";
+const INCOME_UNREGISTERED_TEXT = "所得水準参考：未登録";
 
 const DATA_COLUMNS = {
   mesh: ["key_code", "mesh_code", "mesh", "メッシュコード", "地域メッシュコード"],
@@ -78,6 +80,8 @@ async function boot() {
     initMap();
   }
   await Promise.all([loadDefaultData(), loadIncomeReferences()]);
+  buildAreaSelect();
+  syncAreaSelect();
   render();
 }
 
@@ -95,6 +99,16 @@ function buildPresetSelect() {
 function buildRadiusControls() {
   $("standardRadii").innerHTML = STANDARD_RADII.map((radius) => radiusChip(radius, true)).join("");
   $("extraRadii").innerHTML = EXTRA_RADII.map((radius) => radiusChip(radius, false)).join("");
+}
+
+function buildAreaSelect() {
+  const areaNames = state.incomeReferences.length
+    ? state.incomeReferences.map((item) => item.areaName)
+    : [...new Set(PRESETS.map((place) => place.areaName))];
+  $("areaSelect").innerHTML = [
+    `<option value="">${UNDETERMINED_AREA_TEXT}</option>`,
+    ...areaNames.map((areaName) => `<option value="${areaName}">${areaName}</option>`)
+  ].join("");
 }
 
 function radiusChip(radius, checked) {
@@ -125,6 +139,10 @@ function bindEvents() {
   $("extraRadii").addEventListener("change", render);
   $("fileInput").addEventListener("change", loadManualFiles);
   $("presentationBtn").addEventListener("click", togglePresentationMode);
+  $("areaSelect").addEventListener("change", () => {
+    state.areaName = $("areaSelect").value || UNDETERMINED_AREA_TEXT;
+    render();
+  });
 }
 
 async function loadIncomeReferences() {
@@ -133,6 +151,7 @@ async function loadIncomeReferences() {
     if (!response.ok) throw new Error(`${INCOME_REFERENCE_FILE} を読み込めませんでした。`);
     const data = await response.json();
     state.incomeReferences = Array.isArray(data) ? data : [];
+    console.log(`income-reference.json loaded: ${state.incomeReferences.length} areas`, state.incomeReferences.map((item) => item.areaName).join(", "));
   } catch (error) {
     console.error("income-reference.json load failed", error);
     state.incomeReferences = [];
@@ -192,6 +211,7 @@ function setPlace(place, shouldRender) {
   $("lat").value = place.lat.toFixed(6);
   $("lng").value = place.lng.toFixed(6);
   $("address").value = "";
+  syncAreaSelect();
   moveMap();
   if (shouldRender) render();
 }
@@ -204,9 +224,10 @@ function setCenterFromInputs(name) {
     return;
   }
   state.placeName = name;
-  state.areaName = findNearestPresetArea(lat, lng);
+  state.areaName = findNearestPresetArea(lat, lng) || UNDETERMINED_AREA_TEXT;
   state.center = { lat, lng };
   $("preset").value = "";
+  syncAreaSelect();
   moveMap();
   render();
 }
@@ -222,11 +243,12 @@ async function geocodeAddress() {
   try {
     const result = await geocodeByGsi(address).catch(() => geocodeByNominatim(address));
     state.placeName = result.label;
-    state.areaName = findNearestPresetArea(result.lat, result.lng);
+    state.areaName = inferAreaNameFromText(`${address} ${result.label}`) || findNearestPresetArea(result.lat, result.lng) || UNDETERMINED_AREA_TEXT;
     state.center = { lat: result.lat, lng: result.lng };
     $("lat").value = result.lat.toFixed(6);
     $("lng").value = result.lng.toFixed(6);
     $("preset").value = "";
+    syncAreaSelect();
     $("geoStatus").textContent = result.label;
     moveMap();
     render();
@@ -241,7 +263,19 @@ function findNearestPresetArea(lat, lng) {
   const nearest = PRESETS
     .map((place) => ({ place, distance: distanceMeters({ lat, lng }, place) }))
     .sort((a, b) => a.distance - b.distance)[0];
-  return nearest && nearest.distance <= 8000 ? nearest.place.areaName : "未登録";
+  return nearest && nearest.distance <= 8000 ? nearest.place.areaName : "";
+}
+
+function inferAreaNameFromText(text) {
+  const normalized = normalizeSearchText(text);
+  const match = state.incomeReferences.find((item) => normalized.includes(normalizeSearchText(item.areaName)));
+  return match?.areaName || "";
+}
+
+function syncAreaSelect() {
+  const select = $("areaSelect");
+  if (!select || !select.options.length) return;
+  select.value = [...select.options].some((option) => option.value === state.areaName) ? state.areaName : "";
 }
 
 async function geocodeByGsi(address) {
@@ -341,7 +375,12 @@ function render() {
   renderIncomeReference();
   renderCards(results);
   renderTable(results);
-  drawMap(results);
+  try {
+    drawMap(results);
+  } catch (error) {
+    console.error("map draw failed", error);
+    $("mapFallback").classList.add("show");
+  }
 }
 
 function renderCards(results) {
@@ -394,23 +433,48 @@ function renderTable(results) {
 
 function renderIncomeReference() {
   const income = state.incomeReferences.find((item) => item.areaName === state.areaName);
-  $("incomeArea").textContent = state.areaName && state.areaName !== "未登録" ? state.areaName : "未登録";
-  $("incomeAverage").textContent = formatIncome(income?.averageHouseholdIncome);
-  $("incomeMedian").textContent = formatIncome(income?.medianHouseholdIncome);
-  $("incomeSource").textContent = income?.source ? income.source : "出典未登録";
-  $("incomeNote").textContent = income?.note ? income.note : "未登録";
+  if (!state.areaName || state.areaName === UNDETERMINED_AREA_TEXT) {
+    $("incomeArea").textContent = UNDETERMINED_AREA_TEXT;
+    setIncomeUnavailable("対象地域を手動選択してください。");
+    return;
+  }
+  if (!income) {
+    $("incomeArea").textContent = `${state.areaName}（未登録）`;
+    setIncomeUnavailable(INCOME_UNREGISTERED_TEXT);
+    return;
+  }
+  $("incomeArea").textContent = income.areaName;
+  $("incomeTotal").textContent = `${formatNullableNumber(income.totalHouseholds, "未登録")}世帯`;
+  $("incomeOver500").textContent = formatPercent(income.ratios?.over500);
+  $("incomeOver700").textContent = formatPercent(income.ratios?.over700);
+  $("incomeOver1000").textContent = formatPercent(income.ratios?.over1000);
+  $("incomeDominant").textContent = income.dominantIncomeClass || "未登録";
+  $("incomeMedianClass").textContent = income.medianIncomeClass || "未登録";
+  $("incomeSource").textContent = income.source || "出典未登録";
+  $("incomeNote").textContent = income.sourceNote || "市区町村単位の参考値であり、半径商圏内の実測値ではありません。";
 }
 
 function formatNullableNumber(value, fallback) {
   return Number.isFinite(value) ? nf.format(value) : fallback;
 }
 
+function setIncomeUnavailable(note) {
+  $("incomeTotal").textContent = "未登録";
+  $("incomeOver500").textContent = "未登録";
+  $("incomeOver700").textContent = "未登録";
+  $("incomeOver1000").textContent = "未登録";
+  $("incomeDominant").textContent = "未登録";
+  $("incomeMedianClass").textContent = "未登録";
+  $("incomeSource").textContent = "出典未登録";
+  $("incomeNote").textContent = note;
+}
+
 function formatPeoplePerHousehold(value) {
   return Number.isFinite(value) ? value.toFixed(2) : HOUSEHOLD_UNAVAILABLE_TEXT;
 }
 
-function formatIncome(value) {
-  return Number.isFinite(value) ? `${nf.format(value)}万円` : "未登録";
+function formatPercent(value) {
+  return Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : "未登録";
 }
 
 function togglePresentationMode() {
@@ -613,6 +677,7 @@ function drawMap(results) {
     $("mapFallback").classList.add("show");
     return;
   }
+  state.map.invalidateSize();
   state.layers.forEach((layer) => layer.remove());
   state.layers = [];
   if (state.marker) state.marker.remove();
@@ -637,6 +702,17 @@ function drawMap(results) {
   });
 
   const maxRadius = results.length ? results[results.length - 1].radius : 5000;
-  const bounds = L.circle([state.center.lat, state.center.lng], { radius: maxRadius }).getBounds();
-  state.map.fitBounds(bounds, { padding: [24, 24] });
+  const bounds = circleBounds(state.center, maxRadius);
+  state.map.fitBounds([[bounds.south, bounds.west], [bounds.north, bounds.east]], { padding: [24, 24] });
+}
+
+function circleBounds(center, radius) {
+  const latDelta = radius / 111320;
+  const lngDelta = radius / (111320 * Math.max(Math.cos(center.lat * Math.PI / 180), 0.1));
+  return {
+    south: center.lat - latDelta,
+    north: center.lat + latDelta,
+    west: center.lng - lngDelta,
+    east: center.lng + lngDelta
+  };
 }
