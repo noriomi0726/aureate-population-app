@@ -7,20 +7,7 @@ const OUTPUT_FILE = path.join(ROOT, "data", "income-reference.json");
 
 const SOURCE = "令和5年住宅・土地統計調査 住宅及び世帯に関する基本集計 表43-4";
 const SOURCE_NOTE = "市区町村単位の統計であり、半径商圏内の実測値ではありません。";
-
-const TARGET_AREAS = [
-  "福岡県",
-  "北九州市",
-  "福岡市",
-  "久留米市",
-  "飯塚市",
-  "春日市",
-  "宗像市",
-  "古賀市",
-  "福津市",
-  "新宮町",
-  "遠賀町"
-];
+const FUKUOKA_AREA_CODE_PATTERN = /^40\d{3}$/;
 
 const INCOME_CLASSES = [
   { source: "100万円未満", key: "under100" },
@@ -56,18 +43,22 @@ function main() {
     households: findColumn(header, "主世帯数【世帯】")
   };
 
-  const records = new Map(TARGET_AREAS.map((areaName) => [areaName, createEmptyRecord(areaName)]));
+  const records = new Map();
 
   for (const row of rows.slice(headerIndex + 1)) {
+    const areaCode = normalizeText(row[columns.areaCode]);
     const areaName = normalizeText(row[columns.areaName]);
-    if (!records.has(areaName)) continue;
+    if (!FUKUOKA_AREA_CODE_PATTERN.test(areaCode) || !areaName) continue;
     if (normalizeText(row[columns.ownership]) !== "総数") continue;
 
     const incomeLabel = normalizeIncomeLabel(row[columns.incomeClass]);
     if (incomeLabel !== "総数" && !INCOME_KEY_BY_LABEL.has(incomeLabel)) continue;
 
+    if (!records.has(areaName)) {
+      records.set(areaName, createEmptyRecord(areaName, areaCode));
+    }
     const record = records.get(areaName);
-    record.areaCode = normalizeText(row[columns.areaCode]);
+    record.areaCode = areaCode;
     const households = parseHouseholdCount(row[columns.households]);
 
     if (incomeLabel === "総数") {
@@ -79,15 +70,17 @@ function main() {
     }
   }
 
-  const results = TARGET_AREAS.map((areaName) => finalizeRecord(records.get(areaName)));
+  const results = Array.from(records.values())
+    .sort((a, b) => a.areaCode.localeCompare(b.areaCode, "ja"))
+    .map(finalizeRecord);
   fs.writeFileSync(OUTPUT_FILE, `${JSON.stringify(results, null, 2)}\n`, "utf8");
-  console.log(`income-reference.json generated: ${results.length} areas`);
+  console.log(`income-reference.json generated: ${results.length} Fukuoka areas`);
   console.log(results.map((item) => item.areaName).join(", "));
 }
 
-function createEmptyRecord(areaName) {
+function createEmptyRecord(areaName, areaCode) {
   return {
-    areaCode: "",
+    areaCode,
     areaName,
     source: SOURCE,
     sourceNote: SOURCE_NOTE,
